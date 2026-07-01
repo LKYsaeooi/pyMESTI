@@ -39,6 +39,11 @@ correctness-first Python port with explicit unsupported boundaries for raw
 MUMPS/MPI orchestration, broader curved-geometry subpixel smoothing, and some
 advanced Julia solver controls.
 
+## Acknowledgments
+
+Parts of this Python port were developed with assistance from OpenAI ChatGPT/Codex.
+Human review, testing, and project decisions were performed by the repository maintainer.
+
 ## Solver Backends
 
 `Opts.solver` can select:
