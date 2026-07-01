@@ -1,0 +1,36 @@
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs and temporary outputs
+*.log
+logs/
+tmp/
+temp/
+.codex_tmp/
+
+# Data, generated artifacts, and checkpoints
+data/
+datasets/
+outputs/
+results/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+
+# CodeGraph local databases
+.codegraph/
+**/.codegraph/
+*.db-shm
+*.db-wal
