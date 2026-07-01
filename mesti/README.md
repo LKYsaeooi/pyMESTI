@@ -9,21 +9,17 @@ This project is the Python version of the MESTI.jl project: https://github.com/c
 
 ---
 
-## Overview
+## Package Context
 
-This package is a native Python port of the project-local Julia MESTI code in
-[`Simulation/julia/MESTI.jl-0.5.1`](../../julia/MESTI.jl-0.5.1). The current
-implementation began with the 2D TM/scalar workflow needed by
-[`simu_test_2D_TM.py`](../simu_test_2D_TM.py): building channels, assembling a
-finite-difference frequency-domain operator, solving sparse linear systems, and
-returning either scattering matrices or field profiles.
-The post-2D expansion now also includes Julia-fixture-verified 3D vectorial FDFD assembly and high-level direct `mesti` solves for diagonal and off-diagonal tensor permittivity, 3D `mesti2s` channel/scattering paths for diagonal tensors and fixture-backed off-diagonal tensors, fixture-backed 2D TM/TE plus small 3D subpixel smoothing for rectangular `Cuboid` geometry, compact raw-MUMPS helper demo translations backed by the Python compatibility facade, and importable numerical helpers for selected example scripts.
+The repository-level introduction now lives in [`../README.md`](../README.md).
+This file documents the `mesti` package API, supported behavior, solver
+backends, examples, tests, and known gaps.
 
-The public names intentionally mirror Julia names where practical. This keeps
-the port easy to compare with the original implementation, but Python
+The package is a correctness-first Python port of MESTI.jl internals. Public
+names intentionally mirror Julia names where practical, while Python
 conventions are used where they matter most: channel and grid indices are
 zero-based, arrays are NumPy/SciPy objects, and unsupported Julia paths fail
-explicitly with `NotImplementedError` or a validation error. Curved
+explicitly with `NotImplementedError` or validation errors. Curved
 GeometryPrimitives shapes used by the Julia examples, currently `Ball`, are
 represented as compatibility stubs so unsupported subpixel paths fail with a
 specific message.
@@ -331,6 +327,7 @@ print(distribution.pdf.shape)
 | `"MUMPS"` or `"mumps"` | Use a Python MUMPS binding, preferring `mumpspy` when available |
 | `"mumpspy"` | Force the `mumpspy` binding |
 | `"python-mumps"` | Force the `python-mumps` binding imported as `mumps` |
+| `"cudss"` | Force the explicit NVIDIA cuDSS backend through `nvmath-python` |
 
 For sparse RHS projected solves, `Opts.nrhs` controls the RHS batch width when
 provided. When it is omitted, dense RHS inputs use all columns and sparse RHS
@@ -363,6 +360,33 @@ device memory usage, and `Opts.cudss_register_cuda_memory` controls CUDA host
 registration for hybrid memory. The backend also auto-detects the installed
 cuDSS multithreading layer when available and passes it to nvmath
 `DirectSolverOptions` for faster planning.
+
+Minimal cuDSS factorize-and-solve:
+
+```python
+from mesti import Matrices, Opts, mesti_matrix_solver
+
+X, info = mesti_matrix_solver(
+    Matrices(A=A, B=B),
+    Opts(solver="cudss", verbal=False),
+)
+```
+
+Minimal cuDSS projected APF/Schur solve:
+
+```python
+S, info = mesti_matrix_solver(
+    Matrices(A=A, B=B, C=C),
+    Opts(solver="cudss", method="APF", verbal=False),
+)
+```
+
+`simu_test_2D_TM.py` also exposes `--solver cudss`, `--method APF`,
+`--cudss-use-single-precision`, `--cudss-use-hybrid-memory`,
+`--cudss-hybrid-device-memory-limit`, and
+`--cudss-no-register-cuda-memory`. See
+[`../docs/cudss_nvmath.md`](../docs/cudss_nvmath.md) for environment and WSL
+command details.
 
 `mesti_matrix_solver` accepts `Matrices.C = "transpose(B)"` and uses a
 non-conjugating transpose, matching Julia's symmetrized-K convention. The
